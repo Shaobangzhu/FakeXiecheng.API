@@ -19,26 +19,26 @@ namespace FakeXiecheng.API.Services
         }
 
         // Get a specific picture from tourist picture list by its ID
-        public TouristRoutePicture GetPicture(int pictureId)
+        public async Task<TouristRoutePicture> GetPictureAsync(int pictureId)
         {
-            return _context.TouristRoutePictures.Where(p => p.Id == pictureId).FirstOrDefault();
+            return await _context.TouristRoutePictures.Where(p => p.Id == pictureId).FirstOrDefaultAsync();
         }
 
         // Get picture list by tourist route ID
-        public IEnumerable<TouristRoutePicture> GetPicturesByTouristRouteId(Guid touristRouteId)
+        public async Task<IEnumerable<TouristRoutePicture>> GetPicturesByTouristRouteIdAsync(Guid touristRouteId)
         {
-            return _context.TouristRoutePictures
-                .Where(p => p.TouristRouteId == touristRouteId).ToList(); // p represent picture
+            return await _context.TouristRoutePictures
+                .Where(p => p.TouristRouteId == touristRouteId).ToListAsync(); // p represent picture
         }
 
         // Get specific tourist route by its tourist route ID
-        public TouristRoute GetTouristRoute(Guid touristRouteId)
+        public async Task<TouristRoute> GetTouristRouteAsync(Guid touristRouteId)
         {
-            return _context.TouristRoutes.Include(t => t.TouristRoutePictures).FirstOrDefault(n => n.Id == touristRouteId);
+            return await _context.TouristRoutes.Include(t => t.TouristRoutePictures).FirstOrDefaultAsync(n => n.Id == touristRouteId);
         }
 
         // Get the tourist route list
-        public IEnumerable<TouristRoute> GetTouristRoutes(string keyword, string ratingOperator, int? ratingValue)
+        public async Task<IEnumerable<TouristRoute>> GetTouristRoutesAsync(string keyword, string ratingOperator, int? ratingValue)
         {
             IQueryable<TouristRoute> result = _context
                 .TouristRoutes
@@ -60,17 +60,29 @@ namespace FakeXiecheng.API.Services
                 };
             }
 
-            return result.ToList();
+            return await result.ToListAsync();
 
             // Include is used to connect two different tables.(Eager Load)
             // We use Include here, because in the front page, when we want to demo a recommended tourist route, we want to also show its pictures.
             //return _context.TouristRoutes.Include(t => t.TouristRoutePictures);
         }
 
-        // If a specific tourist route exists
-        public bool TouristRouteExists(Guid touristRouteId)
+        // 通过多个ID获得一组tourist routes
+        public async Task<IEnumerable<TouristRoute>> GetTouristRoutesByIDListAsync(IEnumerable<Guid> ids)
         {
-            return _context.TouristRoutes.Any(t => t.Id == touristRouteId); // t represent tourist route
+            return await _context.TouristRoutes.Where(t => ids.Contains(t.Id)).ToListAsync();
+        }
+
+        // If a specific tourist route exists
+        public async Task<bool> TouristRouteExistsAsync(Guid touristRouteId)
+        {
+            return await _context.TouristRoutes.AnyAsync(t => t.Id == touristRouteId); // t represent tourist route
+        }
+
+        // 将数据写入数据库
+        public async Task<bool> SaveAsync()
+        {
+            return (await _context.SaveChangesAsync() >= 0);
         }
 
         // 向上下文关系对象AppDbContext中添加tourist route数据
@@ -98,11 +110,6 @@ namespace FakeXiecheng.API.Services
             _context.TouristRoutePictures.Add(touristRoutePicture);
         }
 
-        // 将数据写入数据库
-        public bool Save()
-        {
-            return (_context.SaveChanges() >= 0);
-        }
 
         // 将tourist route数据从数据库中删除
         public void DeleteTouristRoute(TouristRoute touristRoute)
@@ -114,12 +121,6 @@ namespace FakeXiecheng.API.Services
         public void DeleteTouristRoutePicture(TouristRoutePicture touristRoutePicture)
         {
             _context.TouristRoutePictures.Remove(touristRoutePicture);
-        }
-
-        // 通过多个ID获得一组tourist routes
-        public IEnumerable<TouristRoute> GetTouristRoutesByIDList(IEnumerable<Guid> ids)
-        {
-            return _context.TouristRoutes.Where(t => ids.Contains(t.Id)).ToList();
         }
 
         // 通过多个ID删除一组tourist routes
