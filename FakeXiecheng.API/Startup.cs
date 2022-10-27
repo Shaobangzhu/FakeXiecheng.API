@@ -15,6 +15,11 @@ using Microsoft.AspNetCore.Mvc.Formatters;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Serialization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.AspNetCore.Identity;
+using FakeXiecheng.API.Models;
 
 namespace FakeXiecheng.API
 {
@@ -31,6 +36,25 @@ namespace FakeXiecheng.API
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddIdentity<ApplicationUser, IdentityRole>()
+                .AddEntityFrameworkStores<AppDbContext>();
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options => {
+                    var secretByte = Encoding.UTF8.GetBytes(Configuration["Authentication:SecretKey"]);
+                    options.TokenValidationParameters = new TokenValidationParameters()
+                    {
+                        ValidateIssuer = true,
+                        ValidIssuer = Configuration["Authentication:Issuer"],
+
+                        ValidateAudience = true,
+                        ValidAudience = Configuration["Authentication:Audience"],
+
+                        ValidateLifetime = true,
+
+                        IssuerSigningKey = new SymmetricSecurityKey(secretByte)
+                    };
+                });
             services.AddControllers(setupAction => {
                 setupAction.ReturnHttpNotAcceptable = true;
                 // DEPRECATED: for understand ONLY
@@ -78,7 +102,11 @@ namespace FakeXiecheng.API
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseRouting();
+            app.UseRouting(); // Where is your location?
+
+            app.UseAuthentication(); // Who are you?
+
+            app.UseAuthorization(); // What can you do?
 
             app.UseEndpoints(endpoints =>
             {
