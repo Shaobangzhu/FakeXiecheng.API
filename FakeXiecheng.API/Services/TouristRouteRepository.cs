@@ -18,6 +18,7 @@ namespace FakeXiecheng.API.Services
             _context = context;
         }
 
+        #region 所有的异步操作
         // Get a specific picture from tourist picture list by its ID
         public async Task<TouristRoutePicture> GetPictureAsync(int pictureId)
         {
@@ -85,6 +86,46 @@ namespace FakeXiecheng.API.Services
             return (await _context.SaveChangesAsync() >= 0);
         }
 
+        // 通过Id来获取用户的购物车信息
+        public async Task<ShoppingCart> GetShoppingCartByUserId(string userId)
+        {
+            return await _context.ShoppingCarts
+                .Include(s => s.User)
+                .Include(s => s.ShoppingCartItems).ThenInclude(li => li.TouristRoute)
+                .Where(s => s.UserId == userId)
+                .FirstOrDefaultAsync();
+        }
+
+        // 创建用户购物车
+        public async Task CreateShoppingCart(ShoppingCart shoppingCart)
+        {
+            await _context.ShoppingCarts.AddAsync(shoppingCart);
+        }
+
+        // 添加商品到购物车
+        public async Task AddShoppingCartItem(LineItem lineItem)
+        {
+            await _context.LineItems.AddAsync(lineItem);
+        }
+
+        // 获取购物车中商品的ID
+        public async Task<LineItem> GetShoppingCartItemByItemId(int lineItemId)
+        {
+            return await _context.LineItems
+                .Where(li => li.Id == lineItemId)
+                .FirstOrDefaultAsync();
+        }
+
+        // 通过购物车商品ID列表获取商品列表
+        public async Task<IEnumerable<LineItem>> GetShoppingCartsByIdListAsync(IEnumerable<int> ids)
+        {
+            return await _context.LineItems
+                .Where(li => ids.Contains(li.Id))
+                .ToListAsync();
+        }
+
+        #endregion
+
         // 向上下文关系对象AppDbContext中添加tourist route数据
         public void AddTouristRoute(TouristRoute touristRoute)
         {
@@ -127,6 +168,18 @@ namespace FakeXiecheng.API.Services
         public void DeleteTouristRoutes(IEnumerable<TouristRoute> touristRoutes)
         {
             _context.TouristRoutes.RemoveRange(touristRoutes);
+        }
+
+        // 删除购物车商品
+        public void DeleteShoppingCartItem(LineItem lineItem)
+        {
+            _context.LineItems.Remove(lineItem);
+        }
+
+        // 批量删除购物车商品
+        public void DeleteShoppingCartItems(IEnumerable<LineItem> lineItems)
+        {
+            _context.LineItems.RemoveRange(lineItems);
         }
     }
 }

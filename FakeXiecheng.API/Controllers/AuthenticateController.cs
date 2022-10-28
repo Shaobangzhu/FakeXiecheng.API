@@ -12,6 +12,7 @@ using Microsoft.Extensions.Configuration;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
 using FakeXiecheng.API.Models;
+using FakeXiecheng.API.Services;
 
 namespace FakeXiecheng.API.Controllers
 {
@@ -20,25 +21,30 @@ namespace FakeXiecheng.API.Controllers
     public class AuthenticateController : ControllerBase
     {
         #region LOCAL VARIABLES
+
         private readonly IConfiguration _configuration;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly ITouristRouteRepository _touristRouteRepository;
+
         #endregion
 
         #region CONSTRUCTOR
         public AuthenticateController(
             IConfiguration configuration,
             UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager
+            SignInManager<ApplicationUser> signInManager,
+            ITouristRouteRepository touristRouteRepository
         )
         {
             _configuration = configuration;
             _userManager = userManager;
             _signInManager = signInManager;
+            _touristRouteRepository = touristRouteRepository;
         }
         #endregion
 
-        #region USER LOGIN
+        #region POST
         [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
@@ -92,9 +98,7 @@ namespace FakeXiecheng.API.Controllers
             // 3. return 200 ok + jwt
             return Ok(tokenStr);
         }
-        #endregion
 
-        #region USER REGISTER
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
         {
@@ -111,7 +115,16 @@ namespace FakeXiecheng.API.Controllers
                 return BadRequest();
             }
 
-            // 3. 用户成功创建以后,在响应主体中输出数据
+            // 3. 给新用户初始化购物车
+            var shoppingCart = new ShoppingCart()
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id
+            };
+            await _touristRouteRepository.CreateShoppingCart(shoppingCart);
+            await _touristRouteRepository.SaveAsync();
+
+            // 4. 用户成功创建以后,在响应主体中输出数据
             return Ok();
         }
         #endregion

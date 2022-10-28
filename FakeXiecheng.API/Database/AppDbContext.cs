@@ -23,6 +23,8 @@ namespace FakeXiecheng.API.Database
         #region 指明有哪些模型需要映射到数据库中
         public DbSet<TouristRoute> TouristRoutes { get; set; }
         public DbSet<TouristRoutePicture> TouristRoutePictures { get; set; }
+        public DbSet<ShoppingCart> ShoppingCarts { get; set; }
+        public DbSet<LineItem> LineItems { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

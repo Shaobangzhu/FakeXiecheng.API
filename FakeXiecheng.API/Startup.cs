@@ -66,6 +66,9 @@ namespace FakeXiecheng.API
                 setupAction.SerializerSettings.ContractResolver =
                 new CamelCasePropertyNamesContractResolver();
             })
+            .AddNewtonsoftJson(options => 
+                options.SerializerSettings.ReferenceLoopHandling = 
+                    Newtonsoft.Json.ReferenceLoopHandling.Ignore)
             .AddXmlDataContractSerializerFormatters()
             .ConfigureApiBehaviorOptions(setupAction =>
             {
