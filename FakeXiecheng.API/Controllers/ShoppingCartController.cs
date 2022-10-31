@@ -56,6 +56,8 @@ namespace FakeXiecheng.API.Controllers
         #endregion
 
         #region POST
+
+        // 添加商品到购物车
         [HttpPost("items")]
         [Authorize(AuthenticationSchemes = "Bearer")]
         public async Task<IActionResult> AddShoppingCartItem(
@@ -92,6 +94,40 @@ namespace FakeXiecheng.API.Controllers
 
             return Ok(_mapper.Map<ShoppingCartDto>(shoppingCart));
         }
+
+        // 商品下单结算
+        [HttpPost("checkout")]
+        [Authorize(AuthenticationSchemes = "Bearer")]
+        public async Task<IActionResult> Checkout()
+        {
+            // 1.获得当前用户
+            var userId = _httpContextAccessor
+                .HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+
+            // 2.使用用户的id来获取该用户的购物车
+            var shoppingCart = await _touristRouteRepository
+                .GetShoppingCartByUserId(userId);
+
+            // 3.创建订单
+            var order = new Order()
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                State = OrderStateEnum.Pending,
+                OrderItems = shoppingCart.ShoppingCartItems,
+                CreateDateUTC = DateTime.UtcNow
+            };
+
+            shoppingCart.ShoppingCartItems = null; // 下单后,清空购物车
+
+            // 4.保存数据
+            await _touristRouteRepository.AddOrderAsync(order);
+            await _touristRouteRepository.SaveAsync();
+
+            // 5.返回响应
+            return Ok(_mapper.Map<OrderDto>(order));
+        }
+
         #endregion
 
         #region DELETE

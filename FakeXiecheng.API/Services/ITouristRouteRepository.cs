@@ -20,6 +20,9 @@ namespace FakeXiecheng.API.Services
         Task AddShoppingCartItem(LineItem lineItem); // 往购物车里添加商品
         Task<LineItem> GetShoppingCartItemByItemId(int lineItemId); // 通过商品ID获取购物车中的商品
         Task<IEnumerable<LineItem>> GetShoppingCartsByIdListAsync(IEnumerable<int> ids); // 通过购物车商品ID列表获取商品列表
+        Task<IEnumerable<Order>> GetOrdersByUserId(string userId); // 通过用户的ID获得用户订单
+        Task<Order> GetOrderById(Guid orderId); // 通过订单的ID获取订单
+        Task AddOrderAsync(Order order); // 添加订单
         void AddTouristRoute(TouristRoute touristRoute); // Add one tourist route to the repo
         void AddTouristRoutePicture(Guid touristRouteId, TouristRoutePicture touristRoutePicture); // Add one tourist route picture to the repo
         void DeleteTouristRoute(TouristRoute touristRoute); // Delete a specific tourist route

@@ -124,6 +124,27 @@ namespace FakeXiecheng.API.Services
                 .ToListAsync();
         }
 
+        // 添加新订单
+        public async Task AddOrderAsync(Order order)
+        {
+            await _context.Orders.AddAsync(order);
+        }
+
+        // 通过用户ID获取订单
+        public async Task<IEnumerable<Order>> GetOrdersByUserId(string userId)
+        {
+            return await _context.Orders.Where(o => o.UserId == userId).ToListAsync();
+        }
+
+        // 通过订单ID获取订单
+        public async Task<Order> GetOrderById(Guid orderId)
+        {
+            // o: order oi: orderItem
+            return await _context.Orders
+                .Include(o => o.OrderItems).ThenInclude(oi => oi.TouristRoute)
+                .Where(o => o.Id == orderId)
+                .FirstOrDefaultAsync();
+        }
         #endregion
 
         // 向上下文关系对象AppDbContext中添加tourist route数据
@@ -150,7 +171,6 @@ namespace FakeXiecheng.API.Services
             touristRoutePicture.TouristRouteId = touristRouteId;
             _context.TouristRoutePictures.Add(touristRoutePicture);
         }
-
 
         // 将tourist route数据从数据库中删除
         public void DeleteTouristRoute(TouristRoute touristRoute)
