@@ -5,6 +5,8 @@ using Stateless;
 
 namespace FakeXiecheng.API.Models
 {
+    #region ORDER_STATE_ENUMS
+
     // 名词/形容词
     public enum OrderStateEnum
     {
@@ -26,12 +28,16 @@ namespace FakeXiecheng.API.Models
         Return // 退货
     }
 
+    #endregion
+
     public class Order
     {
+        #region CONSTRUCTOR
         public Order()
         {
             StateMachineInit();
         }
+        #endregion
 
         [Key]
         public Guid Id { get; set; }
@@ -43,6 +49,8 @@ namespace FakeXiecheng.API.Models
         public string TransactionMetadata { get; set; }
 
         StateMachine<OrderStateEnum, OrderStateTriggerEnum> _machine;
+
+        #region 订单状态机动作
 
         public void PaymentProcessing()
         {
@@ -59,7 +67,9 @@ namespace FakeXiecheng.API.Models
             _machine.Fire(OrderStateTriggerEnum.Reject);
         }
 
-        // 初始化订单状态机
+        #endregion
+
+        #region 初始化订单状态机
         private void StateMachineInit()
         {
             _machine = new StateMachine<OrderStateEnum, OrderStateTriggerEnum>
@@ -79,5 +89,6 @@ namespace FakeXiecheng.API.Models
             _machine.Configure(OrderStateEnum.Completed)
                 .Permit(OrderStateTriggerEnum.Return, OrderStateEnum.Refund);
         }
+        #endregion
     }
 }
