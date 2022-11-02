@@ -1,4 +1,5 @@
-﻿using FakeXiecheng.API.Models;
+﻿using FakeXiecheng.API.Helper;
+using FakeXiecheng.API.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,7 @@ namespace FakeXiecheng.API.Services
 {
     public interface ITouristRouteRepository
     {
-        Task<IEnumerable<TouristRoute>> GetTouristRoutesAsync(string keyword, string ratingOperator, int? ratingValue); // Get all the tourist routes
+        Task<PaginationList<TouristRoute>> GetTouristRoutesAsync(string keyword, string ratingOperator, int? ratingValue, int pageSize, int pageNumber); // Get all the tourist routes
         Task<IEnumerable<TouristRoute>> GetTouristRoutesByIDListAsync(IEnumerable<Guid> ids); // Get the tourist routes by IDs
         Task<TouristRoute> GetTouristRouteAsync(Guid touristRouteId); // Get a specific tourist route through a route ID
         Task<bool> TouristRouteExistsAsync(Guid touristRouteId); // If one specific tourist route exists
@@ -20,7 +21,7 @@ namespace FakeXiecheng.API.Services
         Task AddShoppingCartItem(LineItem lineItem); // 往购物车里添加商品
         Task<LineItem> GetShoppingCartItemByItemId(int lineItemId); // 通过商品ID获取购物车中的商品
         Task<IEnumerable<LineItem>> GetShoppingCartsByIdListAsync(IEnumerable<int> ids); // 通过购物车商品ID列表获取商品列表
-        Task<IEnumerable<Order>> GetOrdersByUserId(string userId); // 通过用户的ID获得用户订单
+        Task<PaginationList<Order>> GetOrdersByUserId(string userId, int pageSize, int pageNumber); // 通过用户的ID获得用户订单
         Task<Order> GetOrderById(Guid orderId); // 通过订单的ID获取订单
         Task AddOrderAsync(Order order); // 添加订单
         void AddTouristRoute(TouristRoute touristRoute); // Add one tourist route to the repo

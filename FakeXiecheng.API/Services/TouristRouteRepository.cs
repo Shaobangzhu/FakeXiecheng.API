@@ -1,4 +1,5 @@
 ﻿using FakeXiecheng.API.Database;
+using FakeXiecheng.API.Helper;
 using FakeXiecheng.API.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -38,8 +39,14 @@ namespace FakeXiecheng.API.Services
             return await _context.TouristRoutes.Include(t => t.TouristRoutePictures).FirstOrDefaultAsync(n => n.Id == touristRouteId);
         }
 
-        // Get the tourist route list
-        public async Task<IEnumerable<TouristRoute>> GetTouristRoutesAsync(string keyword, string ratingOperator, int? ratingValue)
+        // Get the tourist route list (PAGINATION ENABLED)
+        public async Task<PaginationList<TouristRoute>> GetTouristRoutesAsync(
+            string keyword, 
+            string ratingOperator, 
+            int? ratingValue,
+            int pageSize,
+            int pageNumber
+        )
         {
             IQueryable<TouristRoute> result = _context
                 .TouristRoutes
@@ -61,7 +68,14 @@ namespace FakeXiecheng.API.Services
                 };
             }
 
-            return await result.ToListAsync();
+            // PAGINATION
+            // 1.跳过一定量的数据
+            //var skip = (pageNumber - 1) * pageSize;
+            //result = result.Skip(skip);
+            // 2.以pagesize为标准, 显示一定量的数据
+            //result = result.Take(pageSize);
+
+            return await PaginationList<TouristRoute>.CreateAsync(pageNumber, pageSize, result);
 
             // Include is used to connect two different tables.(Eager Load)
             // We use Include here, because in the front page, when we want to demo a recommended tourist route, we want to also show its pictures.
@@ -131,9 +145,12 @@ namespace FakeXiecheng.API.Services
         }
 
         // 通过用户ID获取订单
-        public async Task<IEnumerable<Order>> GetOrdersByUserId(string userId)
+        public async Task<PaginationList<Order>> GetOrdersByUserId(
+            string userId, int pageSize, int pageNumber)
         {
-            return await _context.Orders.Where(o => o.UserId == userId).ToListAsync();
+            //return await _context.Orders.Where(o => o.UserId == userId).ToListAsync();
+            IQueryable<Order> result = _context.Orders.Where(o => o.UserId == userId);
+            return await PaginationList<Order>.CreateAsync(pageNumber, pageSize, result);
         }
 
         // 通过订单ID获取订单

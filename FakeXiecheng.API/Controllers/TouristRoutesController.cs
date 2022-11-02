@@ -13,6 +13,8 @@ using FakeXiecheng.API.Models;
 using Microsoft.AspNetCore.JsonPatch;
 using FakeXiecheng.API.Helper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 
 namespace FakeXiecheng.API.Controllers
 {
@@ -21,38 +23,115 @@ namespace FakeXiecheng.API.Controllers
     public class TouristRoutesController : ControllerBase
     {
         #region Local Variables
+
         private ITouristRouteRepository _touristRouteRepository;
         private readonly IMapper _mapper;
+        private readonly IUrlHelper _urlHelper;
+
         #endregion
 
         #region Constructor
         public TouristRoutesController(
             ITouristRouteRepository touristRouteRepository,
-            IMapper mapper
+            IMapper mapper,
+            IUrlHelperFactory urlHelperFactory,
+            IActionContextAccessor actionContextAccessor
         )
         {
             _touristRouteRepository = touristRouteRepository;
             _mapper = mapper;
+            _urlHelper = urlHelperFactory.GetUrlHelper(actionContextAccessor.ActionContext);
         }
+        #endregion
+
+        #region Private Methods
+
+        private string GenerateTouristRouteResourceURL(
+            TouristRouteResourceParameters parameters,
+            PaginationResourceParameters parameters_pagination,
+            ResourceUrlType type
+        )
+        {
+            return type switch
+            {
+                ResourceUrlType.PreviousPage => _urlHelper.Link("GetTouristRoutes",
+                    new
+                    {
+                        keyword = parameters.Keyword,
+                        rating = parameters.Rating,
+                        pageNumber = parameters_pagination.PageNumber - 1,
+                        pageSize = parameters_pagination.PageSize
+                    }),
+                ResourceUrlType.NextPage => _urlHelper.Link("GetTouristRoutes",
+                    new
+                    {
+                        keyword = parameters.Keyword,
+                        rating = parameters.Rating,
+                        pageNumber = parameters_pagination.PageNumber + 1,
+                        pageSize = parameters_pagination.PageSize
+                    }),
+                _ => _urlHelper.Link("GetTouristRoutes",
+                    new
+                    {
+                        keyword = parameters.Keyword,
+                        rating = parameters.Rating,
+                        pageNumber = parameters_pagination.PageNumber,
+                        pageSize = parameters_pagination.PageSize
+                    })
+            };
+        }
+
         #endregion
 
         #region GET
         // api/touristRoutes?keyword=input_parameter
-        [HttpGet]
+        [HttpGet(Name = "GetTouristRoutes")]
         [HttpHead]
         public async Task<IActionResult> GetTouristRoutes(
-            [FromQuery] TouristRouteResourceParameters parameters
+            [FromQuery] TouristRouteResourceParameters parameters,
+            [FromQuery] PaginationResourceParameters parameters_pagination
         //[FromQuery] string keyword,
         //string rating //lessThan, largerThan, equalTo
         ) // FromQuery负责接收url的参数, FromBody负责接收请求主体
         {
-            var touristRoutesRepo = await _touristRouteRepository.GetTouristRoutesAsync(parameters.Keyword, parameters.RatingOperator, parameters.RatingValue);
-            if (touristRoutesRepo == null || touristRoutesRepo.Count() <= 0)
+            var touristRoutesFromRepo = await _touristRouteRepository
+                .GetTouristRoutesAsync(
+                    parameters.Keyword, 
+                    parameters.RatingOperator, 
+                    parameters.RatingValue,
+                    parameters_pagination.PageSize,
+                    parameters_pagination.PageNumber
+                );
+            if (touristRoutesFromRepo == null || touristRoutesFromRepo.Count() <= 0)
             {
                 return NotFound("There are no tourist routes.");
             }
 
-            var touristRoutesDto = _mapper.Map<IEnumerable<TouristRouteDto>>(touristRoutesRepo);
+            var touristRoutesDto = _mapper.Map<IEnumerable<TouristRouteDto>>(touristRoutesFromRepo);
+
+            var previousPageLink = touristRoutesFromRepo.HasPrevious 
+                ? GenerateTouristRouteResourceURL(
+                    parameters, parameters_pagination, ResourceUrlType.PreviousPage) 
+                : null;
+
+            var nextPageLink = touristRoutesFromRepo.HasNext 
+                ? GenerateTouristRouteResourceURL(
+                    parameters, parameters_pagination, ResourceUrlType.NextPage) 
+                : null;
+
+            // x-pagination
+            var paginationMetadata = new
+            {
+                previousPageLink,
+                nextPageLink,
+                totalCount = touristRoutesFromRepo.TotalCount,
+                pageSize = touristRoutesFromRepo.PageSize,
+                currentPage = touristRoutesFromRepo.CurrentPage,
+                totalPages = touristRoutesFromRepo.TotalPages
+            };
+
+            Response.Headers.Add("x-pagination",
+                Newtonsoft.Json.JsonConvert.SerializeObject(paginationMetadata));
 
             return Ok(touristRoutesDto);
         }
@@ -67,6 +146,7 @@ namespace FakeXiecheng.API.Controllers
                 return NotFound($"Cannot find tourist route {touristRouteId}.");
             }
 
+            #region DEBUG: Mock Dto
             //var touristRouteDto = new TouristRouteDto()
             //{
             //    Id = touristRouteFromRepo.Id,
@@ -83,6 +163,7 @@ namespace FakeXiecheng.API.Controllers
             //    TripType = touristRouteFromRepo.TripType.ToString(),
             //    DepartureCity = touristRouteFromRepo.DepartureCity.ToString()
             //};
+            #endregion
 
             var touristRouteDto = _mapper.Map<TouristRouteDto>(touristRouteFromRepo);
 
