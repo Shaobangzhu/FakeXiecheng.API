@@ -3,6 +3,7 @@ using FakeXiecheng.API.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace FakeXiecheng.API.Services
@@ -70,6 +71,37 @@ namespace FakeXiecheng.API.Services
                     return false;
                 }
             }
+            return true;
+        }
+
+        public bool IsPropertiesExists<T>(string fields)
+        {
+            if (string.IsNullOrWhiteSpace(fields))
+            {
+                return true;
+            }
+
+            // 逗号来分隔字符串
+            var fieldsAfterSplit = fields.Split(',');
+
+            foreach(var field in fieldsAfterSplit)
+            {
+                // 获得属性名称字符串
+                var propertyName = field.Trim();
+
+                var propertyInfo = typeof(T)
+                    .GetProperty(
+                        propertyName,
+                        BindingFlags.IgnoreCase | BindingFlags.Public
+                        | BindingFlags.Instance
+                    );
+                // 如果T中没有找到对应的属性
+                if(propertyInfo == null)
+                {
+                    return false;
+                }
+            }
+
             return true;
         }
     }

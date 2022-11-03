@@ -60,6 +60,7 @@ namespace FakeXiecheng.API.Controllers
                 ResourceUrlType.PreviousPage => _urlHelper.Link("GetTouristRoutes",
                     new
                     {
+                        fields = parameters.Fields,
                         orderBy = parameters.OrderBy,
                         keyword = parameters.Keyword,
                         rating = parameters.Rating,
@@ -69,6 +70,7 @@ namespace FakeXiecheng.API.Controllers
                 ResourceUrlType.NextPage => _urlHelper.Link("GetTouristRoutes",
                     new
                     {
+                        fields = parameters.Fields,
                         orderBy = parameters.OrderBy,
                         keyword = parameters.Keyword,
                         rating = parameters.Rating,
@@ -78,6 +80,7 @@ namespace FakeXiecheng.API.Controllers
                 _ => _urlHelper.Link("GetTouristRoutes",
                     new
                     {
+                        fields = parameters.Fields,
                         orderBy = parameters.OrderBy,
                         keyword = parameters.Keyword,
                         rating = parameters.Rating,
@@ -102,7 +105,12 @@ namespace FakeXiecheng.API.Controllers
         {
             if(!_propertyMappingService.IsMappingExists<TouristRouteDto, TouristRoute>(parameters.OrderBy))
             {
-                return BadRequest("Please correct input order parameter!");
+                return BadRequest("请输入正确的排序参数");
+            }
+
+            if (!_propertyMappingService.IsPropertiesExists<TouristRouteDto>(parameters.Fields))
+            {
+                return BadRequest("请输入正确的塑型参数");
             }
 
             var touristRoutesFromRepo = await _touristRouteRepository
@@ -146,13 +154,20 @@ namespace FakeXiecheng.API.Controllers
                 Newtonsoft.Json.JsonConvert.SerializeObject(paginationMetadata));
             #endregion
 
-            return Ok(touristRoutesDto);
+            return Ok(touristRoutesDto.ShapeData(parameters.Fields));
         }
 
         // api/touristroutes/{touristRouteId}
         [HttpGet("{touristRouteId}", Name = "GetTouristRouteById")]
-        public async Task<IActionResult> GetTouristRouteById(Guid touristRouteId)
+        public async Task<IActionResult> GetTouristRouteById(
+            Guid touristRouteId,
+            string fields
+        )
         {
+            if (!_propertyMappingService.IsPropertiesExists<TouristRouteDto>(fields))
+            {
+                return BadRequest("请输入正确的塑型参数");
+            }
             var touristRouteFromRepo = await _touristRouteRepository.GetTouristRouteAsync(touristRouteId);
             if (touristRouteFromRepo == null)
             {
@@ -180,7 +195,7 @@ namespace FakeXiecheng.API.Controllers
 
             var touristRouteDto = _mapper.Map<TouristRouteDto>(touristRouteFromRepo);
 
-            return Ok(touristRouteDto);
+            return Ok(touristRouteDto.ShapeData(fields));
         }
         #endregion
 
