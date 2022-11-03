@@ -9,7 +9,9 @@ namespace FakeXiecheng.API.Services
 {
     public interface ITouristRouteRepository
     {
-        Task<PaginationList<TouristRoute>> GetTouristRoutesAsync(string keyword, string ratingOperator, int? ratingValue, int pageSize, int pageNumber); // Get all the tourist routes
+        Task<PaginationList<TouristRoute>> GetTouristRoutesAsync(
+            string keyword, string ratingOperator, int? ratingValue,
+            int pageSize, int pageNumber, string orderBy); // Get all the tourist routes
         Task<IEnumerable<TouristRoute>> GetTouristRoutesByIDListAsync(IEnumerable<Guid> ids); // Get the tourist routes by IDs
         Task<TouristRoute> GetTouristRouteAsync(Guid touristRouteId); // Get a specific tourist route through a route ID
         Task<bool> TouristRouteExistsAsync(Guid touristRouteId); // If one specific tourist route exists

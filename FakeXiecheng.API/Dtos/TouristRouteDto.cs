@@ -13,6 +13,8 @@ namespace FakeXiecheng.API.Dtos
         public Guid Id { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
+        public decimal OriginalPrice { get; set; }
+        public double? DiscountPresent { get; set; }
         // 计算方式: 原价 * 折扣
         public decimal Price { get; set; }
         public DateTime CreateTime { get; set; }

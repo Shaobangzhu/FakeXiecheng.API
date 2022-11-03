@@ -1,4 +1,5 @@
 ﻿using FakeXiecheng.API.Database;
+using FakeXiecheng.API.Dtos;
 using FakeXiecheng.API.Helper;
 using FakeXiecheng.API.Models;
 using Microsoft.EntityFrameworkCore;
@@ -13,10 +14,15 @@ namespace FakeXiecheng.API.Services
     {
         // DATABASE: 上下文关系对象
         private readonly AppDbContext _context;
+        private readonly IPropertyMappingService _propertyMappingService;
 
-        public TouristRouteRepository(AppDbContext context)
+        public TouristRouteRepository(
+            AppDbContext context,
+            IPropertyMappingService propertyMappingService
+        )
         {
             _context = context;
+            _propertyMappingService = propertyMappingService;
         }
 
         #region 所有的异步操作
@@ -45,7 +51,8 @@ namespace FakeXiecheng.API.Services
             string ratingOperator, 
             int? ratingValue,
             int pageSize,
-            int pageNumber
+            int pageNumber,
+            string orderBy
         )
         {
             IQueryable<TouristRoute> result = _context
@@ -68,12 +75,28 @@ namespace FakeXiecheng.API.Services
                 };
             }
 
-            // PAGINATION
+            if (!string.IsNullOrWhiteSpace(orderBy))
+            {
+                #region HARDCODED价格排序
+                //if(orderBy.ToLowerInvariant() == "originalprice")
+                //{
+                //    result = result.OrderBy(t => t.OriginalPrice);
+                //}
+                #endregion
+
+                var touristRouteMappingDictionary = _propertyMappingService
+                    .GetPropertyMapping<TouristRouteDto, TouristRoute>();
+
+                result = result.ApplySort(orderBy, touristRouteMappingDictionary);
+            }
+
+            #region PAGINATION(MOVED TO PAGINATIONLIST IN HELPER)
             // 1.跳过一定量的数据
             //var skip = (pageNumber - 1) * pageSize;
             //result = result.Skip(skip);
             // 2.以pagesize为标准, 显示一定量的数据
             //result = result.Take(pageSize);
+            #endregion
 
             return await PaginationList<TouristRoute>.CreateAsync(pageNumber, pageSize, result);
 
