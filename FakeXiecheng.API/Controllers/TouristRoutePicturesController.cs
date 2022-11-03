@@ -34,7 +34,7 @@ namespace FakeXiecheng.API.Controllers
         #endregion
 
         #region GET
-        [HttpGet]
+        [HttpGet(Name = "GetPictureListForTouristRoute")]
         public async Task<IActionResult> GetPictureListForTouristRoute(Guid touristRouteId)
         {
             if (!(await _touristRouteRepository.TouristRouteExistsAsync(touristRouteId)))
@@ -70,7 +70,7 @@ namespace FakeXiecheng.API.Controllers
         #endregion
 
         #region POST
-        [HttpPost]
+        [HttpPost(Name = "CreateTouristRoutePicture")]
         [Authorize(AuthenticationSchemes = "Bearer")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateTouristRoutePicture(

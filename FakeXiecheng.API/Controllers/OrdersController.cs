@@ -47,7 +47,7 @@ namespace FakeXiecheng.API.Controllers
         #region GET
 
         // 获得当前用户的订单历史记录
-        [HttpGet]
+        [HttpGet(Name = "GetOrders")]
         [Authorize(AuthenticationSchemes = "Bearer")]
         public async Task<IActionResult> GetOrders([FromQuery] PaginationResourceParameters parameters)
         {

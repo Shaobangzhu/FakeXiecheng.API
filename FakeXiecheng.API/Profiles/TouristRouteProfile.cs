@@ -44,6 +44,12 @@ namespace FakeXiecheng.API.Profiles
             CreateMap<TouristRouteForUpdateDto, TouristRoute>();
             CreateMap<TouristRoute, TouristRouteForUpdateDto>();
             #endregion
+
+            CreateMap<TouristRoute, TouristRoutesSimplifyDto>()
+                .ForMember(
+                    dest => dest.Price,
+                    opt => opt.MapFrom(src => src.OriginalPrice * (decimal)(src.DiscountPresent ?? 1))
+                );
         }
     }
 }
